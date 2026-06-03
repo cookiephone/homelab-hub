@@ -23,6 +23,7 @@ impl HttpChecker {
     pub fn new(check: &Check, timeout: Duration, warn_ms: u64) -> anyhow::Result<Self> {
         let mut builder = Client::builder()
             .timeout(timeout)
+            .pool_max_idle_per_host(0)
             .user_agent(concat!("homelab-hub/", env!("CARGO_PKG_VERSION")));
 
         if check.insecure_skip_tls_verify {
