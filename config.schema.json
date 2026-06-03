@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/cookiephone/homelab-hub/config.schema.json",
+  "title": "homelab-hub config",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "title": { "type": "string", "description": "Page title shown in the header." },
+    "subtitle": { "type": "string" },
+    "theme": { "enum": ["auto", "light", "dark"], "default": "auto" },
+    "refreshInterval": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 15,
+      "description": "Fallback UI poll interval in seconds when live updates are unavailable."
+    },
+    "defaults": { "$ref": "#/definitions/defaults" },
+    "groups": { "type": "array", "items": { "$ref": "#/definitions/group" } }
+  },
+  "definitions": {
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interval": { "type": "integer", "minimum": 1, "description": "Seconds between checks." },
+        "timeout": { "type": "integer", "minimum": 1, "description": "Per-check timeout in seconds." },
+        "warnResponseTimeMs": { "type": "integer", "minimum": 1, "description": "Responses slower than this are 'degraded'." },
+        "retentionDays": { "type": "integer", "minimum": 1, "description": "How long raw check history is kept." },
+        "warnCertDays": { "type": "integer", "minimum": 1, "description": "TLS certs expiring within this many days are 'degraded'." }
+      }
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "icon": { "type": "string" },
+        "services": { "type": "array", "items": { "$ref": "#/definitions/service" } }
+      }
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "id": { "type": "string", "description": "Stable id; derived from name if omitted." },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "icon": { "type": "string", "description": "Icon URL (http/https) or bundled icon name." },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "links": { "type": "array", "items": { "$ref": "#/definitions/link" } },
+        "checks": { "type": "array", "items": { "$ref": "#/definitions/check" } }
+      }
+    },
+    "link": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "url"],
+      "properties": {
+        "label": { "type": "string" },
+        "url": { "type": "string" },
+        "primary": { "type": "boolean", "default": false }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "target"],
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "enum": ["http", "tcp", "tls", "ping"] },
+        "target": {
+          "type": "string",
+          "description": "HTTP(S) URL for http; host:port for tcp; host or host:port (default 443) for tls; host for ping."
+        },
+        "method": { "type": "string", "description": "HTTP method (default GET)." },
+        "expectStatus": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "description": "Acceptable HTTP status codes (default 2xx)."
+        },
+        "expectBodyContains": { "type": "string" },
+        "headers": { "type": "object", "additionalProperties": { "type": "string" } },
+        "insecureSkipTlsVerify": { "type": "boolean", "default": false },
+        "interval": { "type": "integer", "minimum": 1 },
+        "timeout": { "type": "integer", "minimum": 1 },
+        "warnResponseTimeMs": { "type": "integer", "minimum": 1 },
+        "warnCertDays": { "type": "integer", "minimum": 1, "description": "TLS only: override defaults.warnCertDays." }
+      }
+    }
+  }
+}

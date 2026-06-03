@@ -1,0 +1,40 @@
+# systemd unit for running homelab-hub on bare metal (e.g. a Proxmox LXC).
+#
+# Install:
+#   install -Dm755 target/release/homelab-hub /usr/local/bin/homelab-hub
+#   install -Dm644 config.example.json /etc/homelab-hub/config.json   # then edit it
+#   install -Dm644 deploy/homelab-hub.service /etc/systemd/system/homelab-hub.service
+#   systemctl daemon-reload && systemctl enable --now homelab-hub
+#
+# Logs:   journalctl -u homelab-hub -f
+
+[Unit]
+Description=homelab-hub dashboard and status panel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Run as an isolated, auto-managed user; StateDirectory below is owned by it.
+DynamicUser=yes
+StateDirectory=homelab-hub
+ExecStart=/usr/local/bin/homelab-hub \
+    --config /etc/homelab-hub/config.json \
+    --db /var/lib/homelab-hub/hub.db \
+    --bind 0.0.0.0:8080
+Restart=on-failure
+RestartSec=3
+Environment=RUST_LOG=info
+
+# Hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+# ICMP "ping" checks need raw sockets. Only needed if you build with
+# `--features ping` and use type "ping"; uncomment to grant the capability:
+# AmbientCapabilities=CAP_NET_RAW
+
+[Install]
+WantedBy=multi-user.target

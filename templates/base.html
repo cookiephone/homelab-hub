@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"{% if !data.theme_attr.is_empty() %} data-theme="{{ data.theme_attr }}"{% endif %}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ data.title }}</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  {% block content %}{% endblock %}
+  <footer class="footer">
+    <span>Powered by <strong>homelab-hub</strong></span>
+    <button type="button" id="theme-toggle" class="theme-toggle" title="Toggle theme">◐</button>
+  </footer>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

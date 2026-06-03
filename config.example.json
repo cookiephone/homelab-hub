@@ -1,0 +1,292 @@
+{
+  "$schema": "./config.schema.json",
+  "title": "My Homelab",
+  "subtitle": "Hub & status panel: sample configuration",
+  "theme": "auto",
+  "refreshInterval": 15,
+  "defaults": {
+    "interval": 30,
+    "timeout": 5,
+    "warnResponseTimeMs": 800,
+    "retentionDays": 90,
+    "warnCertDays": 14
+  },
+  "groups": [
+    {
+      "name": "Infrastructure",
+      "icon": "🖥️",
+      "services": [
+        {
+          "id": "proxmox",
+          "name": "Proxmox VE",
+          "description": "Hypervisor cluster",
+          "icon": "proxmox",
+          "tags": ["hypervisor", "cluster"],
+          "links": [
+            { "label": "Web UI", "url": "https://192.168.1.10:8006", "primary": true },
+            { "label": "Shell", "url": "https://192.168.1.10:8006/#v1:0:18:4" }
+          ],
+          "checks": [
+            { "name": "web", "type": "tcp", "target": "192.168.1.10:8006" },
+            { "name": "cert", "type": "tls", "target": "192.168.1.10:8006", "warnCertDays": 7 }
+          ]
+        },
+        {
+          "name": "OPNsense",
+          "description": "Firewall & gateway",
+          "icon": "opnsense",
+          "tags": ["firewall", "network"],
+          "links": [
+            { "label": "Admin", "url": "https://192.168.1.1", "primary": true }
+          ],
+          "checks": [
+            {
+              "name": "admin",
+              "type": "http",
+              "target": "https://192.168.1.1/",
+              "method": "GET",
+              "expectStatus": [200, 403],
+              "insecureSkipTlsVerify": true
+            },
+            { "name": "gateway", "type": "ping", "target": "192.168.1.1" }
+          ]
+        },
+        {
+          "name": "TrueNAS",
+          "description": "ZFS storage server",
+          "icon": "https://cdn.jsdelivr.net/gh/selfhst/icons/svg/truenas-scale.svg",
+          "tags": ["storage", "zfs"],
+          "links": [
+            { "label": "Web UI", "url": "https://nas.home.lab", "primary": true },
+            { "label": "API docs", "url": "https://nas.home.lab/api/docs" }
+          ],
+          "checks": [
+            {
+              "name": "api",
+              "type": "http",
+              "target": "https://nas.home.lab/api/v2.0/system/info",
+              "method": "GET",
+              "expectStatus": [200],
+              "headers": {
+                "Authorization": "Bearer demo-token-replace-me",
+                "Accept": "application/json"
+              },
+              "warnResponseTimeMs": 1200,
+              "insecureSkipTlsVerify": true
+            },
+            { "name": "smb", "type": "tcp", "target": "192.168.1.20:445" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Self-hosted apps",
+      "icon": "📦",
+      "services": [
+        {
+          "name": "Jellyfin",
+          "description": "Media server",
+          "icon": "jellyfin",
+          "tags": ["media", "transcoding"],
+          "links": [
+            { "label": "Web UI", "url": "https://jellyfin.home.lab", "primary": true },
+            { "label": "Metrics", "url": "https://jellyfin.home.lab/metrics" }
+          ],
+          "checks": [
+            {
+              "name": "web",
+              "type": "http",
+              "target": "https://jellyfin.home.lab/health",
+              "expectStatus": [200],
+              "warnResponseTimeMs": 1500,
+              "insecureSkipTlsVerify": true
+            },
+            { "name": "stream-port", "type": "tcp", "target": "jellyfin.home.lab:8096" },
+            { "name": "cert", "type": "tls", "target": "jellyfin.home.lab" }
+          ]
+        },
+        {
+          "name": "Nextcloud",
+          "description": "Files & sync",
+          "icon": "nextcloud",
+          "tags": ["files", "sync"],
+          "links": [
+            { "label": "Web UI", "url": "https://cloud.home.lab", "primary": true }
+          ],
+          "checks": [
+            {
+              "name": "status",
+              "type": "http",
+              "target": "https://cloud.home.lab/status.php",
+              "expectStatus": [200],
+              "expectBodyContains": "installed"
+            },
+            { "name": "cert", "type": "tls", "target": "cloud.home.lab", "warnCertDays": 30 }
+          ]
+        },
+        {
+          "name": "Vaultwarden",
+          "description": "Password manager",
+          "icon": "vaultwarden",
+          "tags": ["passwords", "security"],
+          "links": [
+            { "label": "Web Vault", "url": "https://vault.home.lab", "primary": true }
+          ],
+          "checks": [
+            {
+              "name": "alive",
+              "type": "http",
+              "target": "https://vault.home.lab/alive",
+              "expectStatus": [200],
+              "interval": 60
+            }
+          ]
+        },
+        {
+          "id": "hass",
+          "name": "Home Assistant",
+          "description": "Home automation",
+          "icon": "home-assistant",
+          "tags": ["automation", "iot"],
+          "links": [
+            { "label": "Dashboard", "url": "https://hass.home.lab", "primary": true }
+          ],
+          "checks": [
+            {
+              "name": "api",
+              "type": "http",
+              "target": "https://hass.home.lab/api/",
+              "method": "GET",
+              "expectStatus": [200],
+              "expectBodyContains": "API running",
+              "headers": { "Authorization": "Bearer demo-long-lived-token" },
+              "interval": 20,
+              "timeout": 8
+            }
+          ]
+        },
+        {
+          "name": "Gitea",
+          "description": "Git hosting & CI",
+          "icon": "gitea",
+          "tags": ["git", "ci"],
+          "links": [
+            { "label": "Web UI", "url": "https://git.home.lab", "primary": true }
+          ],
+          "checks": [
+            {
+              "name": "web",
+              "type": "http",
+              "target": "https://git.home.lab/api/healthz",
+              "expectStatus": [200]
+            },
+            { "name": "ssh", "type": "tcp", "target": "git.home.lab:22" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Network & DNS",
+      "icon": "🌐",
+      "services": [
+        {
+          "name": "Pi-hole",
+          "description": "Primary DNS & ad-block",
+          "icon": "pi-hole",
+          "tags": ["dns", "adblock"],
+          "links": [
+            { "label": "Admin", "url": "http://192.168.1.5/admin", "primary": true }
+          ],
+          "checks": [
+            {
+              "name": "admin",
+              "type": "http",
+              "target": "http://192.168.1.5/admin/",
+              "expectStatus": [200, 301, 302]
+            },
+            { "name": "dns", "type": "tcp", "target": "192.168.1.5:53" }
+          ]
+        },
+        {
+          "name": "AdGuard Home",
+          "description": "Secondary DNS",
+          "icon": "adguard-home",
+          "tags": ["dns"],
+          "links": [
+            { "label": "Dashboard", "url": "http://192.168.1.6", "primary": true }
+          ],
+          "checks": [
+            {
+              "name": "control",
+              "type": "http",
+              "target": "http://192.168.1.6/control/status",
+              "expectStatus": [200]
+            },
+            { "name": "dns", "type": "tcp", "target": "192.168.1.6:53" }
+          ]
+        },
+        {
+          "name": "Traefik",
+          "description": "Reverse proxy & TLS termination",
+          "icon": "traefik",
+          "tags": ["proxy", "tls"],
+          "links": [
+            { "label": "Dashboard", "url": "https://proxy.home.lab/dashboard/", "primary": true }
+          ],
+          "checks": [
+            {
+              "name": "ping",
+              "type": "http",
+              "target": "https://proxy.home.lab/ping",
+              "expectStatus": [200]
+            },
+            { "name": "https", "type": "tcp", "target": "192.168.1.2:443" },
+            { "name": "cert", "type": "tls", "target": "home.lab", "warnCertDays": 21 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Internet",
+      "icon": "🌍",
+      "services": [
+        {
+          "name": "Example.com",
+          "description": "Outbound reachability probe",
+          "icon": "https://cdn.jsdelivr.net/gh/selfhst/icons/svg/firefox.svg",
+          "tags": ["external"],
+          "links": [
+            { "label": "Open", "url": "https://example.com", "primary": true }
+          ],
+          "checks": [
+            { "name": "web", "type": "http", "target": "https://example.com", "expectStatus": [200] },
+            { "name": "cert", "type": "tls", "target": "example.com" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Bookmarks",
+      "icon": "🔖",
+      "services": [
+        {
+          "name": "Documentation",
+          "description": "A plain link tile with no checks, shown as unknown",
+          "icon": "bookstack",
+          "tags": ["docs"],
+          "links": [
+            { "label": "Open", "url": "https://docs.home.lab", "primary": true }
+          ]
+        },
+        {
+          "name": "Grafana",
+          "description": "Dashboards (link only)",
+          "icon": "grafana",
+          "links": [
+            { "label": "Open", "url": "https://grafana.home.lab", "primary": true }
+          ]
+        }
+      ]
+    }
+  ]
+}

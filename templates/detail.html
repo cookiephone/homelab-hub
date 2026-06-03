@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"{% if !theme_attr.is_empty() %} data-theme="{{ theme_attr }}"{% endif %}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page_title }}</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <main class="container detail">
+    <p class="back"><a href="/">← Back to dashboard</a></p>
+
+    <header class="detail-head">
+      <div class="avatar">
+        <span class="avatar-letter">{{ initial }}</span>
+        {% if !icon_url.is_empty() %}<img class="avatar-img" src="{{ icon_url }}" alt="" loading="lazy" onerror="this.remove()">{% endif %}
+      </div>
+      <div class="detail-titles">
+        <h1>{{ name }}</h1>
+        {% if !description.is_empty() %}<p class="desc">{{ description }}</p>{% endif %}
+      </div>
+      <span class="pill {{ status_css }}">{{ status_label }}</span>
+      {% if has_checks %}<button type="button" class="btn check-now" data-service="{{ service_id }}">⟳ Check now</button>{% endif %}
+    </header>
+
+    {% if !addresses.is_empty() %}
+    <div class="addresses">{% for a in addresses %}<span class="addr">{{ a }}</span>{% endfor %}</div>
+    {% endif %}
+
+    {% if !links.is_empty() %}
+    <div class="links">
+      {% for link in links %}<a class="btn{% if link.primary %} primary{% endif %}" href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>{% endfor %}
+    </div>
+    {% endif %}
+
+    {% for check in checks %}
+    <section class="detail-check">
+      <div class="check-row">
+        <span class="pill sm {{ check.status_css }}" title="{% if !check.reason.is_empty() %}{{ check.reason }}{% else %}{{ check.status_label }}{% endif %}">{{ check.status_label }}</span>
+        <span class="check-name">{{ check.name }}</span>
+        <span class="check-meta">{{ check.kind }} · {{ check.target }} · {{ check.uptime.percent_text }} · {{ check.uptime.latency_text }}{% if !check.checked_text.is_empty() %} · {{ check.checked_text }}{% endif %}</span>
+      </div>
+      <div class="uptime tall">
+        {% for seg in check.uptime.segments %}<span class="seg {{ seg.css }}" title="{{ seg.title }}"></span>{% endfor %}
+      </div>
+      {% if !check.events.is_empty() %}
+      <table class="events">
+        <thead><tr><th>When</th><th>Status</th><th>Latency</th><th>Detail</th></tr></thead>
+        <tbody>
+          {% for e in check.events %}
+          <tr>
+            <td>{{ e.time }}</td>
+            <td><span class="pill sm {{ e.status_css }}">{{ e.status_label }}</span></td>
+            <td>{{ e.latency_text }}</td>
+            <td class="ev-detail">{{ e.error }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted">No history yet.</p>
+      {% endif %}
+    </section>
+    {% endfor %}
+
+    {% if !has_checks %}
+    <p class="muted">This service has no health checks configured.</p>
+    {% endif %}
+  </main>
+  <footer class="footer">
+    <span>Powered by <strong>homelab-hub</strong></span>
+    <button type="button" id="theme-toggle" class="theme-toggle" title="Toggle theme">◐</button>
+  </footer>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

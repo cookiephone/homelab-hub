@@ -1,0 +1,42 @@
+[package]
+name = "homelab-hub"
+version = "0.1.0"
+edition = "2021"
+description = "A config-driven hub & status panel for your homelab"
+license = "MIT"
+repository = "https://github.com/cookiephone/homelab-hub"
+
+[dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal", "time", "sync"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "gzip"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+x509-parser = "0.16"
+surge-ping = { version = "0.8", optional = true }
+dashmap = "6"
+async-trait = "0.1"
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite", "migrate", "macros"] }
+notify = "6"
+tokio-stream = { version = "0.1", features = ["sync"] }
+axum = "0.7"
+tower-http = { version = "0.5", features = ["compression-gzip", "trace"] }
+askama = "0.12"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+clap = { version = "4", features = ["derive", "env"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+rust-embed = "8"
+mime_guess = "2"
+arc-swap = "1"
+anyhow = "1"
+
+[features]
+# ICMP ping checks. Requires raw-socket privileges (CAP_NET_RAW) at runtime.
+ping = ["dep:surge-ping"]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

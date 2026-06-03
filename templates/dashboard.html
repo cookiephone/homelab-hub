@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+
+{% block content %}
+<div class="filterbar">
+  <input type="search" id="filter" placeholder="Filter services by name or tag…" autocomplete="off" spellcheck="false">
+</div>
+<main class="container" id="dashboard" data-refresh="{{ data.refresh_interval }}" data-window="{{ data.window_value }}">
+{% call macros::dashboard_content(data) %}
+</main>
+{% endblock %}

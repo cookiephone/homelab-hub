@@ -1,0 +1,95 @@
+{% macro service_card(service) %}
+<article class="card" id="service-{{ service.id }}" data-status="{{ service.status_css }}" data-filter="{{ service.filter_text }}">
+  <div class="card-head">
+    <div class="avatar">
+      <span class="avatar-letter">{{ service.initial }}</span>
+      {% if !service.icon_url.is_empty() %}<img class="avatar-img" src="{{ service.icon_url }}" alt="" loading="lazy" onerror="this.remove()">{% endif %}
+    </div>
+    <div class="card-titles">
+      <h3><a href="/services/{{ service.id }}">{{ service.name }}</a></h3>
+      {% if !service.description.is_empty() %}<p class="desc">{{ service.description }}</p>{% endif %}
+    </div>
+    <span class="pill {{ service.status_css }}" title="{{ service.status_label }}">{{ service.status_label }}</span>
+    {% if service.has_checks %}<button type="button" class="icon-btn check-now" data-service="{{ service.id }}" title="Check now" aria-label="Check now">⟳</button>{% endif %}
+  </div>
+
+  {% if !service.addresses.is_empty() %}
+  <div class="addresses">{% for a in service.addresses %}<span class="addr">{{ a }}</span>{% endfor %}</div>
+  {% endif %}
+
+  {% if !service.tags.is_empty() %}
+  <div class="tags">{% for t in service.tags %}<span class="tag">{{ t }}</span>{% endfor %}</div>
+  {% endif %}
+
+  {% if !service.links.is_empty() %}
+  <div class="links">
+    {% for link in service.links %}
+    <a class="btn{% if link.primary %} primary{% endif %}" href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if service.has_checks %}
+  <div class="checks">
+    {% for check in service.checks %}
+    <div class="check">
+      <div class="check-row">
+        <span class="pill sm {{ check.status_css }}" title="{% if !check.reason.is_empty() %}{{ check.reason }}{% else %}{{ check.status_label }}{% endif %}">{{ check.status_label }}</span>
+        <span class="check-name">{{ check.name }}</span>
+        <span class="check-meta">{{ check.kind }} · {{ check.uptime.percent_text }} · {{ check.uptime.latency_text }}{% if !check.checked_text.is_empty() %} · {{ check.checked_text }}{% endif %}</span>
+      </div>
+      <div class="uptime" title="{{ check.target }}">
+        {% for seg in check.uptime.segments %}<span class="seg {{ seg.css }}" title="{{ seg.title }}"></span>{% endfor %}
+      </div>
+      {% if !check.reason.is_empty() %}<div class="reason">{{ check.reason }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</article>
+{% endmacro %}
+
+
+{% macro dashboard_content(data) %}
+<header class="hub-header">
+  <div class="hub-title">
+    <h1>{{ data.title }}</h1>
+    {% if !data.subtitle.is_empty() %}<p class="subtitle">{{ data.subtitle }}</p>{% endif %}
+  </div>
+  <div class="summary">
+    <span class="badge up">{{ data.summary.up }} up</span>
+    {% if data.summary.degraded > 0 %}<span class="badge degraded">{{ data.summary.degraded }} degraded</span>{% endif %}
+    <span class="badge down">{{ data.summary.down }} down</span>
+    {% if data.summary.unknown > 0 %}<span class="badge unknown">{{ data.summary.unknown }} unknown</span>{% endif %}
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="windows" role="group" aria-label="Uptime window">
+    {% for w in data.windows %}
+    <button type="button" class="window-btn{% if w.active %} active{% endif %}" data-window="{{ w.value }}">{{ w.label }}</button>
+    {% endfor %}
+  </div>
+  <div class="toolbar-meta">
+    <span class="hub-uptime" title="hub running time">up {{ data.hub_uptime }}</span>
+    <span class="updated" id="updated"></span>
+  </div>
+</div>
+
+{% for group in data.groups %}
+<section class="group" data-group="{{ group.name }}">
+  <h2 class="group-title">
+    {% if !group.icon.is_empty() %}<span class="group-icon">{{ group.icon }}</span>{% endif %}
+    {{ group.name }}
+    <span class="group-count">{{ group.up }}/{{ group.total }} up</span>
+  </h2>
+  <div class="cards">
+    {% for service in group.services %}{% call service_card(service) %}{% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+{% if data.groups.is_empty() %}
+<p class="empty">No services configured yet. Edit your <code>config.json</code> to add some.</p>
+{% endif %}
+{% endmacro %}
